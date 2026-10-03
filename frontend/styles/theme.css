@@ -87,3 +87,10 @@ div[data-testid="stChatMessage"] { background: var(--rl-surface); border: 1px so
 
 [data-testid="stSidebarHeader"] img, [data-testid="stLogo"] { height: 34px !important; max-height: 34px !important; }
 [data-testid="stSidebarHeader"] { padding-top: 18px; }
+
+/* author credit, bottom of the sidebar */
+.rl-credit { margin-top: 18px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 11px; line-height: 1.5; color: #8b95a1; }
+.rl-credit-name b { color: #c9d1d9; font-weight: 600; }
+.rl-credit-links { display: flex; gap: 12px; margin-top: 8px; }
+.rl-credit-links a { color: #8b95a1 !important; display: inline-flex; text-decoration: none; transition: color .15s; }
+.rl-credit-links a:hover, .rl-credit-links a:focus-visible { color: #ffffff !important; }
