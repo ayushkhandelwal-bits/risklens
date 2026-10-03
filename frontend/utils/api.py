@@ -11,6 +11,16 @@ import requests
 import streamlit as st
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
+# API_URL=embedded runs the FastAPI backend inside this Streamlit process (single-service hosting,
+# e.g. Streamlit Community Cloud). The same routes, validation and error handling are used.
+EMBEDDED = API_URL.strip().lower() == "embedded"
+
+
+@st.cache_resource(show_spinner="Starting the RiskLens engine…")
+def _embedded_client():
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    return TestClient(app, raise_server_exceptions=False)
 
 
 class APIError(RuntimeError):
@@ -32,6 +42,15 @@ def _params_key(params: dict | None) -> tuple:
 
 
 def _request(method: str, path: str, params: dict | None = None, json: dict | None = None, timeout: int = 60):
+    if EMBEDDED:
+        r = _embedded_client().request(method, path, params=params, json=json)
+        if r.status_code >= 400:
+            try:
+                msg = r.json().get("message") or r.json().get("detail") or r.text
+            except Exception:
+                msg = r.text
+            raise APIError(str(msg), r.status_code)
+        return r.json()
     try:
         r = requests.request(method, f"{API_URL}{path}", params=params, json=json, timeout=timeout)
     except requests.ConnectionError:

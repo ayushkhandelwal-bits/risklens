@@ -299,7 +299,8 @@ Set in `.env`: `LLM_PROVIDER=anthropic` (or `openai`), `LLM_API_KEY=...`, and op
 
 ## 11. Deployment
 
-- **Streamlit Community Cloud + managed PostgreSQL** (Neon, Supabase, Render). Run `scripts.build_all` once against the cloud database, deploy the API (Render, Railway or Fly) with `DATABASE_URL`, and deploy `streamlit_app.py` with `API_URL` pointing at the API.
+- **Free public demo (recommended, $0): Streamlit Community Cloud + Neon free Postgres.** The FastAPI backend runs *inside* the Streamlit process (`API_URL = "embedded"`), so only one free app is needed. `python -m scripts.build_public` loads a 30,000 + 8,000 customer sample (about 670 MB, under Neon's 1 GB free limit) and writes its models to `ml/artifacts_public/`. Step-by-step guide: [`docs/deploy_free.md`](docs/deploy_free.md).
+- **Streamlit Community Cloud + managed PostgreSQL with a separate API** (Neon, Supabase, Render). Run `scripts.build_all` once against the cloud database, deploy the API (Render, Railway or Fly) with `DATABASE_URL`, and deploy `streamlit_app.py` with `API_URL` pointing at the API.
 - **Single VM / Railway / Render with Docker**: use `docker-compose.yml` (one image, separate api/ui/build/mcp services).
 - Secrets come from environment variables only. `.env` is git-ignored.
 

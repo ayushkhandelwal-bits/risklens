@@ -17,10 +17,24 @@ load_dotenv(ROOT / ".env")
 # --------------------------------------------------------------------------
 # Infrastructure
 # --------------------------------------------------------------------------
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://risklens:risklens@localhost:5432/risklens")
+def _normalise_db_url(url: str) -> str:
+    """Accept provider-style URLs (postgres://, postgresql://, e.g. from Neon) and use the psycopg 3 driver."""
+    url = url.strip()
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+def _resolve(path: str | Path) -> Path:
+    p = Path(path)
+    return p if p.is_absolute() else ROOT / p
+
+
+DATABASE_URL = _normalise_db_url(os.getenv("DATABASE_URL", "postgresql+psycopg://risklens:risklens@localhost:5432/risklens"))
 RAW_DATA_DIR = Path(os.getenv("RAW_DATA_DIR", ROOT / "data"))   # Kaggle CSVs (also searched in data/raw, data/fresh)
 PROCESSED_DIR = ROOT / "data" / "processed"
-MODEL_PATH = Path(os.getenv("MODEL_PATH", ROOT / "ml" / "artifacts"))
+MODEL_PATH = _resolve(os.getenv("MODEL_PATH", ROOT / "ml" / "artifacts"))
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 

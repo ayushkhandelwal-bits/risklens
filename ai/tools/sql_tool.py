@@ -72,13 +72,18 @@ def validate(sql: str) -> str:
 def _engine():
     """Prefer the least-privilege role; fall back to the app role (still in a READ ONLY transaction)."""
     url = os.getenv("AI_DATABASE_URL")
-    if not url:
+    if url:
+        from common.config import _normalise_db_url
+        url = _normalise_db_url(url)
+    else:
         url = re.sub(r"//[^@]+@", "//risklens_ai:risklens_ai@", DATABASE_URL)
     eng = create_engine(url, pool_pre_ping=True)
     try:
         with eng.connect() as c:
-            c.execute(text("SELECT 1"))
-        return eng, "risklens_ai (least-privilege role)"
+            user = c.execute(text("SELECT current_user")).scalar()
+        if user == "risklens_ai":
+            return eng, "risklens_ai (least-privilege role)"
+        return eng, f"{user} (read-only transaction)"
     except Exception:
         return create_engine(DATABASE_URL, pool_pre_ping=True), "application role (read-only transaction)"
 

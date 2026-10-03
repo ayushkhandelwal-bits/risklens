@@ -20,6 +20,7 @@ __pycache__/
 venv/
 logs/*.log
 
-# Model artefacts are rebuilt deterministically by scripts/build_all ---
+# Local model artefacts are rebuilt deterministically by scripts/build_all ---
 ml/artifacts/*
 !ml/artifacts/.gitkeep
+# ml/artifacts_public/ (models for the hosted demo database) IS committed.
