@@ -1,5 +1,9 @@
 # RiskLens — AI-Powered Lending Risk Intelligence Platform
 
+   [![Live demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://risklens-app.streamlit.app/)
+
+   **Live demo:** https://risklens-app.streamlit.app/ (free hosting; the first load after a quiet period can take about a minute while the app and database wake up). The demo runs on a 30,000-customer sample, so its numbers differ slightly from the full local build described below.
+
 > **RiskLens is an AI-powered lending risk intelligence platform that helps risk teams monitor portfolio health, identify emerging credit risk, investigate suspicious behaviour, explain model decisions and use an AI Risk Analyst to perform data-driven investigations.**
 
 RiskLens is a working internal risk platform for a fictional digital lender. It combines data engineering, a PostgreSQL data model, a Customer 360, portfolio analytics, credit-risk models with SHAP explanations, an Early Warning System, behavioural anomaly detection, model monitoring and a tool-using AI analyst (also exposed over MCP), wired together behind a FastAPI backend and a Streamlit dashboard.
