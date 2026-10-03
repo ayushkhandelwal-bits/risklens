@@ -1,0 +1,66 @@
+# RiskLens local stack
+#   1. put the Kaggle CSVs in ./data   (or set RAW_DATA_DIR)
+#   2. docker compose up -d db
+#   3. docker compose run --rm build        # ETL + models + EWS + anomaly + monitoring (~3-5 min)
+#   4. docker compose up -d api ui          # http://localhost:8501  (API docs: http://localhost:8000/docs)
+name: risklens
+
+x-app: &app
+  build: .
+  image: risklens:latest
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DATABASE_URL: postgresql+psycopg://risklens:risklens@db:5432/risklens
+    AI_DATABASE_URL: postgresql+psycopg://risklens_ai:risklens_ai@db:5432/risklens
+    RAW_DATA_DIR: /app/data
+    API_URL: http://api:8000
+  volumes:
+    - ./data:/app/data
+    - model_artifacts:/app/ml/artifacts
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: risklens
+      POSTGRES_PASSWORD: risklens
+      POSTGRES_DB: risklens
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/docker_init_ai_role.sql:/docker-entrypoint-initdb.d/01_ai_role.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risklens -d risklens"]
+      interval: 5s
+      retries: 20
+
+  build:
+    <<: *app
+    command: ["python", "-m", "scripts.build_all"]
+    profiles: ["build"]
+
+  api:
+    <<: *app
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["8000:8000"]
+
+  ui:
+    <<: *app
+    command: ["streamlit", "run", "streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    ports: ["8501:8501"]
+    depends_on: [api]
+
+  mcp:
+    <<: *app
+    command: ["python", "-m", "mcp_server.server", "--http", "--port", "8765"]
+    ports: ["8765:8765"]
+    profiles: ["mcp"]
+
+volumes:
+  pgdata:
+  model_artifacts:

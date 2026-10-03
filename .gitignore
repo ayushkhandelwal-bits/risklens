@@ -1,0 +1,25 @@
+# Data (Kaggle terms: do not redistribute) ---------------------------
+data/*.csv
+data/*.zip
+data/fresh/
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+*.csv.gz
+
+# Secrets -------------------------------------------------------------
+.env
+
+# Python / tooling ----------------------------------------------------
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+logs/*.log
+
+# Model artefacts are rebuilt deterministically by scripts/build_all ---
+ml/artifacts/*
+!ml/artifacts/.gitkeep
