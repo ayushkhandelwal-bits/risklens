@@ -1,16 +1,23 @@
 """
-Provider-agnostic LLM client with tool calling (Anthropic Claude or OpenAI).
+Provider-agnostic LLM client with tool calling.
 
-    LLM_PROVIDER=anthropic|openai   LLM_API_KEY=...   LLM_MODEL=(optional)
+    LLM_PROVIDER=anthropic|openai|gemini|groq|xai   LLM_API_KEY=...   LLM_MODEL=(optional)   LLM_BASE_URL=(optional)
+
+gemini, groq and xai use their OpenAI-compatible endpoints (free tiers exist for gemini and groq; limits change,
+check the provider console). Any other OpenAI-compatible service works with LLM_PROVIDER=openai + LLM_BASE_URL.
 """
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
 
-from common.config import LLM_API_KEY, LLM_MODEL, LLM_PROVIDER
+from common.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_PROVIDER
 
-DEFAULT_MODELS = {"anthropic": "claude-sonnet-5-5", "openai": "gpt-5.5"}
+DEFAULT_MODELS = {"anthropic": "claude-sonnet-5-5", "openai": "gpt-5.5", "gemini": "gemini-3.8-flash",
+                  "groq": "openai/gpt-oss-120b", "xai": "grok-4"}
+BASE_URLS = {"gemini": "https://generativelanguage.googleapis.com/v1beta/openai/",
+             "groq": "https://api.groq.com/openai/v1", "xai": "https://api.x.ai/v1"}
+_ASSISTANT_KEYS = ("role", "content", "tool_calls")   # drop provider extras (e.g. 'reasoning') that others reject
 
 
 class LLMUnavailable(RuntimeError):
@@ -69,8 +76,10 @@ class AnthropicClient:
 class OpenAIClient:
     def __init__(self, system: str, tools: list, api_key: str = LLM_API_KEY, model: str | None = None):
         import openai
-        self.client = openai.OpenAI(api_key=api_key, max_retries=2, timeout=90)
-        self.model = model or LLM_MODEL or DEFAULT_MODELS["openai"]
+        provider = LLM_PROVIDER if LLM_PROVIDER in DEFAULT_MODELS else "openai"
+        base_url = LLM_BASE_URL or BASE_URLS.get(provider)
+        self.client = openai.OpenAI(api_key=api_key, base_url=base_url, max_retries=3, timeout=90)
+        self.model = model or LLM_MODEL or DEFAULT_MODELS[provider]
         self.tools = [{"type": "function", "function": {"name": t.name, "description": t.description,
                                                          "parameters": t.parameters}} for t in tools]
         self.messages: list[dict] = [{"role": "system", "content": system}]
@@ -84,7 +93,10 @@ class OpenAIClient:
     def step(self) -> Turn:
         resp = self.client.chat.completions.create(model=self.model, messages=self.messages, tools=self.tools)
         msg = resp.choices[0].message
-        self.messages.append(msg.model_dump(exclude_none=True))
+        dumped = msg.model_dump(exclude_none=True)
+        clean = {k: dumped[k] for k in _ASSISTANT_KEYS if k in dumped}   # tool_calls kept whole (Gemini signatures)
+        clean.setdefault("content", "")
+        self.messages.append(clean)
         turn = Turn(text=msg.content or "")
         for tc in msg.tool_calls or []:
             try:

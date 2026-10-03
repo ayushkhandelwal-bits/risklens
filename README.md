@@ -1,8 +1,8 @@
 # RiskLens — AI-Powered Lending Risk Intelligence Platform
 
-   [![Live demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://risklens-app.streamlit.app/)
+[![Live demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://risklens-app.streamlit.app/)
 
-   **Live demo:** https://risklens-app.streamlit.app/ (free hosting; the first load after a quiet period can take about a minute while the app and database wake up). The demo runs on a 30,000-customer sample, so its numbers differ slightly from the full local build described below.
+**Live demo:** https://risklens-app.streamlit.app/ (free hosting; the first load after a quiet period can take about a minute while the app and database wake up). The demo runs on a 30,000-customer sample, so its numbers differ slightly from the full local build described below.
 
 > **RiskLens is an AI-powered lending risk intelligence platform that helps risk teams monitor portfolio health, identify emerging credit risk, investigate suspicious behaviour, explain model decisions and use an AI Risk Analyst to perform data-driven investigations.**
 
@@ -290,7 +290,7 @@ docker compose --profile mcp up -d mcp   # optional MCP server on :8765
 ```
 
 ### Enabling the LLM
-Set in `.env`: `LLM_PROVIDER=anthropic` (or `openai`), `LLM_API_KEY=...`, and optionally `LLM_MODEL=...`. Never commit `.env`.
+Set in `.env` (or Streamlit secrets): `LLM_PROVIDER` = `anthropic`, `openai`, `gemini`, `groq` or `xai`, plus `LLM_API_KEY=...` and optionally `LLM_MODEL=...`. **Free options:** Google Gemini (key from Google AI Studio) and Groq (key from console.groq.com) have no-card free tiers; their limits change, so check the provider console. If the provider rate-limits or fails, the analyst falls back to the offline planner automatically. Never commit `.env`.
 
 ### Using RiskLens from Claude Desktop (MCP)
 ```json

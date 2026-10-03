@@ -209,3 +209,41 @@ def test_ai_api_endpoints():
     assert r["tool_calls"][0]["tool"] == "get_anomaly_signals" and "fraud determination" in r["answer"]
     assert c.post("/ai/investigate", json={"customer_id": "C1"}).status_code == 404
     assert c.post("/ai/query", json={"question": ""}).status_code == 422
+
+
+@requires_db
+@pytest.mark.parametrize("provider,host,model", [("groq", "api.groq.com", "openai/gpt-oss-120b"),
+                                                  ("gemini", "generativelanguage.googleapis.com", "gemini-3.8-flash")])
+def test_openai_compatible_free_providers(monkeypatch, provider, host, model):
+    """Real OpenAI SDK + HTTP mock: preset base URL, provider extras stripped, Gemini signatures kept."""
+    import httpx
+    import openai
+    from ai import agent, llm
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        seen.append((request.url.host, request.url.path, body))
+        if len(seen) == 1:
+            msg = {"role": "assistant", "content": None, "reasoning": "thinking...", "tool_calls": [
+                {"id": "call_1", "type": "function", "extra_content": {"google": {"thought_signature": "sig123"}},
+                 "function": {"name": "get_portfolio_metrics", "arguments": json.dumps({"group_by": "risk_tier"})}}]}
+            fr = "tool_calls"
+        else:
+            msg, fr = {"role": "assistant", "content": "Grounded answer."}, "stop"
+        return httpx.Response(200, json={"id": "x", "object": "chat.completion", "created": 0, "model": body["model"],
+                                         "choices": [{"index": 0, "message": msg, "finish_reason": fr}]})
+
+    real = openai.OpenAI
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: real(**kw, http_client=httpx.Client(transport=httpx.MockTransport(handler))))
+    monkeypatch.setattr(llm, "LLM_PROVIDER", provider)
+    monkeypatch.setattr(llm, "LLM_MODEL", "")
+    monkeypatch.setattr(llm, "LLM_BASE_URL", "")
+    monkeypatch.setattr(llm, "llm_configured", lambda: True)
+    monkeypatch.setattr(llm, "make_client", lambda system, tools: llm.OpenAIClient(system, tools, api_key="k"))
+    r = agent.investigate("How big is the portfolio?")
+    assert r.mode == "llm" and r.answer.startswith("Grounded answer")
+    assert all(h == host for h, _, _ in seen) and seen[0][2]["model"] == model
+    assistant = seen[1][2]["messages"][-2]
+    assert assistant["role"] == "assistant" and "reasoning" not in assistant
+    assert assistant["tool_calls"][0]["extra_content"]["google"]["thought_signature"] == "sig123"

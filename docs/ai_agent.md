@@ -7,7 +7,7 @@ A chatbot on its own invents plausible numbers. A risk analyst needs **evidence*
 | File | Role |
 |---|---|
 | `ai/agent.py` | Orchestrates the investigation: system prompt, tool loop (max 10 steps), error capture, audit, fallback |
-| `ai/llm.py` | Provider layer with Anthropic Claude (`claude-sonnet-5-5` default) or OpenAI (`gpt-5.5`), native tool calling |
+| `ai/llm.py` | Provider layer with native tool calling: Anthropic Claude (`claude-sonnet-5-5` default), OpenAI (`gpt-5.5`), or the OpenAI-compatible endpoints of Google Gemini, Groq and xAI (free tiers exist for Gemini and Groq) |
 | `ai/planner.py` | Offline mode: deterministic intent routing → same tools → templated answer built only from tool outputs |
 | `ai/prompts/system.md` | Rules: tool-grounded numbers, test the premise, materiality, provenance labels, decision support only, output formats |
 | `ai/tools/*.py` | 10 tools, registered once and reused by the agent and the MCP server |
@@ -58,7 +58,7 @@ The data says booked-portfolio PD is **stable**: 8.00% → 7.99%, −0.2% relati
 ## Modes
 | Mode | When | Behaviour |
 |---|---|---|
-| `llm` | `LLM_API_KEY` set | the model plans tool calls freely and writes the answer from tool results |
+| `llm` | `LLM_API_KEY` set (`LLM_PROVIDER` = anthropic, openai, gemini, groq or xai) | the model plans tool calls freely and writes the answer from tool results |
 | `planner` | no key, or the LLM fails | deterministic plan for the 7 supported intents; templated answer from tool outputs |
 | `*+mcp` | `RISKLENS_TOOL_TRANSPORT=mcp` | every tool call goes through the MCP server (protocol-level) |
 

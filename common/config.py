@@ -38,10 +38,11 @@ MODEL_PATH = _resolve(os.getenv("MODEL_PATH", ROOT / "ml" / "artifacts"))
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
-# LLM (AI Risk Analyst). Provider-agnostic: "anthropic" or "openai".
+# LLM (AI Risk Analyst). "anthropic", "openai", or OpenAI-compatible "gemini" / "groq" / "xai".
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "anthropic").lower()
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "")  # empty -> provider default (see ai/llm.py)
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")  # optional: any OpenAI-compatible endpoint
 
 # --------------------------------------------------------------------------
 # ETL / sampling
