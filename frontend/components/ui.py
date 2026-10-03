@@ -37,7 +37,8 @@ pio.templates["risklens"] = go.layout.Template(layout=dict(
     hovermode="closest", bargap=0.35,
 ))
 pio.templates.default = "risklens"
-CHART_CONFIG = {"displayModeBar": False, "responsive": True}
+CHART_CONFIG = {"displayModeBar": False, "responsive": True, "scrollZoom": False, "doubleClick": False,
+                "showAxisDragHandles": False}
 
 
 def load_css() -> None:
@@ -107,8 +108,10 @@ def empty_state(msg: str) -> None:
 
 def chart(fig: go.Figure, height: int = 300) -> None:
     fig.update_layout(height=height, template="risklens", paper_bgcolor="#ffffff", plot_bgcolor="#ffffff")
-    fig.update_yaxes(automargin=True)
-    fig.update_xaxes(automargin=True)
+    # Read-only charts: no click-drag zoom or pan (it made lines vanish with no visible reset); hover tooltips stay.
+    fig.update_layout(dragmode=False)
+    fig.update_yaxes(automargin=True, fixedrange=True)
+    fig.update_xaxes(automargin=True, fixedrange=True)
     st.plotly_chart(fig, use_container_width=True, config=CHART_CONFIG, theme=None)
 
 

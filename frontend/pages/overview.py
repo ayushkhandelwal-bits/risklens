@@ -72,11 +72,11 @@ with c1:
     x = [r["vintage"] for r in vint]
     fig.add_trace(go.Scatter(x=x, y=[r["default_rate"] for r in vint], name="Observed default rate",
                              mode="lines+markers", line=dict(width=2, color=ui.SERIES[1]), marker=dict(size=8),
-                             hovertemplate="%{x}<br>Observed default rate %{y:.2%}<extra></extra>"))
+                             hovertemplate="Observed %{y:.2%}<extra></extra>"))
     if scored:
         fig.add_trace(go.Scatter(x=x, y=[r["avg_pd"] for r in vint], name="Average PD (model)",
                                  mode="lines+markers", line=dict(width=2, color=ui.SERIES[0]), marker=dict(size=8),
-                                 hovertemplate="%{x}<br>Average PD %{y:.2%}<extra></extra>"))
+                                 hovertemplate="Avg PD %{y:.2%}<extra></extra>"))
     fig.update_layout(title="Portfolio Risk Trend by Vintage", yaxis_tickformat=".1%", hovermode="x unified")
     ui.chart(fig, 320)
     st.caption("Vintages are simulated booking quarters (Home Credit has no calendar dates) — see methodology.")
@@ -122,7 +122,8 @@ with c4:
                                         ("pos_dpd_rate", ui.SERIES[2])), start=1):
             fig.add_trace(go.Scatter(x=m, y=[r[key] for r in beh], mode="lines", line=dict(width=2, color=col),
                                      showlegend=False, hovertemplate="Month %{x}<br>%{y:.2%}<extra></extra>"), 1, i)
-            fig.update_yaxes(tickformat=".0%", row=1, col=i, gridcolor=ui.GRID)
+            top = max((r[key] or 0) for r in beh)
+            fig.update_yaxes(tickformat=".1%" if top < 0.05 else ".0%", row=1, col=i, gridcolor=ui.GRID)
             fig.update_xaxes(title_text="months before application", row=1, col=i, title_font=dict(size=10))
         fig.update_annotations(font=dict(size=12, color=ui.INK2))
         fig.update_layout(title="Early Warning Trends · behaviour in the 24 months before application",
